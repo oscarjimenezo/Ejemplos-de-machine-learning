@@ -1,0 +1,298 @@
+---
+title: "COMPARATIVA ERTES DURANTE PERIODOS CRISIS FINANCIERA / COVID-19 EN LA COMUNIDAD VALENCIANA"
+author: "Grupo laboratorio: María del Rocio Vidal | Javier Martínez Germán | Óscar Jiménez Osuna."
+date: "31/01/2021"
+output:
+  html_document: 
+    df_print: default
+    theme: null
+  word_document: default
+  pdf_document: 
+    keep_tex: yes
+    number_sections: yes
+    toc_depth: 10
+---
+
+
+```{r setup, include=TRUE}
+library(knitr)
+
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+*Fuente* : https://dadesobertes.gva.es/es/dataset/tra-eres-ertes-v2-2021
+
+## ATRIBUTOS
+
+FECHA_SOLICITUD	timestamp
+Fecha de solicitud
+
+PROVINCIA	text	
+Provincia en la que la empresa tiene su sede social
+
+MUNICIPIO	text	
+Municipio en el que la empresa tiene su sede social. Consulte la autoridad laboral ante la que presenta la solicitud para saber en qué provincia se encuentra el centro laboral afectado
+
+SECTOR	text	
+Sector al que pertenecen las empresas
+
+SECTOR_FACT numeric
+Sector al que pertenecen las empresas factorizado:
+
+AGRICULTURA	    1
+CONSTRUCIÓN	    2
+INDUSTRIA	      3
+OTROS           4 
+SERVICIOS       5
+
+DESC_CNAE	text	
+Actividad económica
+
+CAUSA	text	
+Causa de la solicitud del expediente de regulación
+
+TOTAL_TRAB_EXT numeric
+Total de personas trabajadoras para las cuales se ha solicitado extinción
+
+TOTAL_TRAB_RED numeric
+Total de personas trabajadoras para las cuales se ha solicitado reducción
+
+TOTAL_TRAB_SUS	numeric	
+Total de personas trabajadoras para las cuales se ha solicitado suspensión
+
+### Carga de datos.
+
+```{r}
+#install.packages("dplyr") 
+library(dplyr) 
+library(tidyverse)
+library(readxl)
+df <- read_excel("C:/datos.xlsx")
+head(df)
+```
+
+### Resumen de los estadísticos.
+
+```{r}
+summary(df)
+```
+
+### Comprobación cantidad de valores nulos.
+
+```{r}
+sum(is.na(df))
+```
+
+### Eliminamos los valores nulos y comprobamos que no queda ninguno.
+
+```{r}
+df<-na.omit(df)
+sum(is.na(df))
+```
+
+### Cantidad de filas y columnas.
+
+```{r}
+dim(df)
+```
+
+### Ordenamos por fecha.
+
+```{r}
+df<-df[order(df$FECHA_SOLICITUD),]
+head(df)
+```
+
+### Filtramos por año los periodos del 2008 al 2014 (crisis financiera) y del 2020 hasta la fecha actual (crisis del COVID).
+
+```{r}
+df_2008 = filter(df, FECHA_SOLICITUD > "2008-01-01" & FECHA_SOLICITUD < "2014-12-31")
+head(df_2008)
+
+df_2020 = filter(df, FECHA_SOLICITUD > "2020-03-01" & FECHA_SOLICITUD < "2021-01-26")
+head(df_2020)
+
+```
+
+### Número de ERTEs por periodo.
+
+```{r}
+sum(df_2008$TOTAL_TRAB_SUS)
+sum(df_2020$TOTAL_TRAB_SUS)
+```
+
+
+### Número de días en los que no han existido suspensiones.
+
+```{r}
+sum(df_2008$TOTAL_TRAB_SUS==0)
+sum(df_2020$TOTAL_TRAB_SUS==0)
+```
+
+# Modelo 1. Modelo relacional basado en la estadística relacional básica.
+
+## Medidas de tendencia central (medias y medianas).
+
+### Moda.
+
+```{r}
+moda_2008<-c(names(which(table(df_2008$TOTAL_TRAB_SUS)==max(table(df_2008$TOTAL_TRAB_SUS)))))
+
+moda_2020<-c(names(which(table(df_2020$TOTAL_TRAB_SUS)==max(table(df_2020$TOTAL_TRAB_SUS)))))
+
+modas<-data.frame(moda_2008,moda_2020, row.names = c("TOTAL_TRAB_SUS" ))
+modas
+```
+
+### Medias.
+
+```{r}
+medias_2008<-c(mean(df_2008$TOTAL_TRAB_SUS))
+medias_2020<-c(mean(df_2020$TOTAL_TRAB_SUS))
+medias<-data.frame(medias_2008,medias_2020, row.names = c("TOTAL_TRAB_SUS" ))
+medias
+```
+
+
+### Medianas.
+
+```{r}
+median_2008<-c(median(df_2008$TOTAL_TRAB_SUS))
+median_2020<-c(median(df_2020$TOTAL_TRAB_SUS))
+medianas<-data.frame(median_2008,median_2020, row.names = c("TOTAL_TRAB_SUS" ))
+medianas
+```
+
+### Medidas de posición.
+
+```{r}
+Q25_2008<-c(quantile(df_2008$TOTAL_TRAB_SUS, 0.25))
+Q25_2020<-c(quantile(df_2020$TOTAL_TRAB_SUS, 0.25))
+Q5_2008<-c(quantile(df_2008$TOTAL_TRAB_SUS, 0.5))
+
+Q5_2020<-c(quantile(df_2020$TOTAL_TRAB_SUS, 0.5))
+Q75_2008<-c(quantile(df_2008$TOTAL_TRAB_SUS, 0.75))
+Q75_2020<-c(quantile(df_2020$TOTAL_TRAB_SUS, 0.75))
+
+Q<-data.frame(Q25_2008,Q25_2020,Q5_2008,Q5_2020, Q75_2008, Q75_2020, row.names = c( "TOTAL_TRAB_SUS" ))
+Q
+```
+
+## Medidas de dispersión.
+
+### Rango.
+
+```{r}
+rango_2008<-c(diff(range(df_2008$TOTAL_TRAB_SUS)))
+rango_2020<-c(diff(range(df_2020$TOTAL_TRAB_SUS)))
+rango<-data.frame(rango_2008,rango_2020, row.names = c("TOTAL_TRAB_SUS" ))
+rango
+```
+
+### Rango intercuartílico.
+
+```{r}
+IQR_2008<-c(IQR(df_2008$TOTAL_TRAB_SUS))
+IQR_2020<-c(IQR(df_2020$TOTAL_TRAB_SUS))
+IQR_<-data.frame(IQR_2008,IQR_2020, row.names = c("TOTAL_TRAB_SUS" ))
+IQR_
+
+```
+
+### Desviaciones típicas.
+
+```{r}
+std_2008<-c(sd(df_2008$TOTAL_TRAB_SUS))
+std_2020<-c(sd(df_2020$TOTAL_TRAB_SUS))
+std<-data.frame(std_2008,std_2020, row.names = c("TOTAL_TRAB_SUS" ))
+
+```
+
+### Varianza muestral.
+
+```{r}
+var_2008<-c(var(df_2008$TOTAL_TRAB_SUS))
+var_2020<-c(var(df_2020$TOTAL_TRAB_SUS))
+varianzas<-data.frame(var_2008,var_2020, row.names = c("TOTAL_TRAB_SUS" ))
+varianzas
+```
+
+## Resumen estadístico.
+
+### Por sector.
+
+```{r}
+by(df_2008$TOTAL_TRAB_SUS,df_2008$SECTOR,FUN=summary)
+
+by(df_2020$TOTAL_TRAB_SUS,df_2020$SECTOR,FUN=summary)
+```
+
+### Desviaciones típicas por sectores.
+
+```{r}
+sd_sectores_2008<-sd(df_2008$SECTOR_FACT)
+sd_sectores_2020<-sd(df_2020$SECTOR_FACT)
+std<-data.frame(sd_sectores_2008,sd_sectores_2020, row.names = c("DESVIACIONES TIPICAS POR SECTORES" ))
+std
+```
+
+
+### Tabla de frecuencias relativas por sectores.
+
+```{r}
+sectores_2008 = c(list(df_2008$SECTOR))
+sectores_2020 = c(list(df_2020$SECTOR))
+prop.table(table(sectores_2008))*100
+prop.table(table(sectores_2020))*100
+```
+
+### Diagrámas de cajas por sectores.
+
+```{r}
+boxplot(df_2008$TOTAL_TRAB_SUS~df_2008$SECTOR, main="Diagrama de caja de trabajadores extinguidos año 2008 por sectores", ylab="nº trabajadores extinguidos", xlab="",col = "red", ylim=c(0,35), cex.axis = 0.7)
+boxplot(df_2020$TOTAL_TRAB_SUS~df_2020$SECTOR, main="Diagrama de caja de trabajadores extinguidos año 2020 por sectores", ylab="nº trabajadores extinguidos", xlab="",col = "red", ylim=c(0,30), cex.axis = 0.7)
+```
+
+# Modelo 2. Regresión Lineal.
+
+### Buscamos la relación (nº trabajadores suspendidos) = a + b·(total trabajadores afectador por el ERTE).
+
+```{r}
+#trab_totales<- sum(colSums (df[ , 8:10]))
+#trab_totales
+regresion1 <- lm(df$TOTAL_TRAB_SUS ~ df$TOTAL_TRAB, df)
+regresion1
+summary(regresion1)
+```
+```{r}
+plot(df$TOTAL_TRAB, df$TOTAL_TRAB_SUS, xlab='Total trabajadores afectados por ERTE', ylab='Trabajadores suspendidos', main = "Relación lineal de trabajadores suspendidos")
+abline(regresion1, col = "red")
+```
+
+### Buscamos la relación (nº trabajadores extinguidos) = a + b·(total trabajadores afectador por el ERTE).
+
+```{r}
+regresion2<- lm(df$TOTAL_TRAB_EXT ~ df$TOTAL_TRAB, df)
+regresion2
+summary(regresion2)
+```
+
+```{r}
+plot(df$TOTAL_TRAB, df$TOTAL_TRAB_EXT, xlab='Total trabajadores afectados por ERTE', ylab='Trabajadores extinguidos', main = "Relación lineal de trabajadores extinguidos")
+abline(regresion2, col = "red")
+```
+
+### Buscamos la relación (nº trabajadores reducidos) = a + b·(total trabajadores afectador por el ERTE).
+
+```{r}
+regresion3 <- lm(df$TOTAL_TRAB_RED ~ df$TOTAL_TRAB, df)
+regresion3
+summary(regresion3)
+```
+
+```{r}
+plot(df$TOTAL_TRAB, df$TOTAL_TRAB_RED, xlab='Total trabajadores afectados por ERTE', ylab='Trabajadores reducidos', main = "Relación lineal de trabajadores reducidos")
+abline(regresion3, col = "red")
+```
+
