@@ -1,6 +1,6 @@
 ---
 title: "COMPARATIVA ERTES DURANTE PERIODOS CRISIS FINANCIERA / COVID-19 EN LA COMUNIDAD VALENCIANA"
-author: "Grupo laboratorio: María del Rocio Vidal | Javier Martínez Germán | Óscar Jiménez Osuna."
+author: "Grupo laboratorio: María del Rocio Vidal Manzano | Javier Martínez Germán | Óscar Jiménez Osuna."
 date: "31/01/2021"
 output:
   html_document: 
@@ -107,10 +107,10 @@ head(df)
 ### Filtramos por año los periodos del 2008 al 2014 (crisis financiera) y del 2020 hasta la fecha actual (crisis del COVID).
 
 ```{r}
-df_2008 = filter(df, FECHA_SOLICITUD > "2008-01-01" & FECHA_SOLICITUD < "2014-12-31")
+df_2008 = filter(df, FECHA_SOLICITUD >= "2008-01-01" & FECHA_SOLICITUD <= "2014-12-31")
 head(df_2008)
 
-df_2020 = filter(df, FECHA_SOLICITUD > "2020-03-01" & FECHA_SOLICITUD < "2021-01-26")
+df_2020 = filter(df, FECHA_SOLICITUD >= "2020-03-01" & FECHA_SOLICITUD <= "2021-01-26")
 head(df_2020)
 
 ```
@@ -122,19 +122,24 @@ sum(df_2008$TOTAL_TRAB_SUS)
 sum(df_2020$TOTAL_TRAB_SUS)
 ```
 
-
-### Número de días en los que no han existido suspensiones.
+### Número de días sin suspensiones en el periodo de crisis financiera.
 
 ```{r}
-sum(df_2008$TOTAL_TRAB_SUS==0)
-sum(df_2020$TOTAL_TRAB_SUS==0)
+length(unique(subset((df_2008$FECHA_SOLICITUD), df_2008$TOTAL_TRAB_SUS==0)))
 ```
 
-# Modelo 1. Modelo relacional basado en la estadística relacional básica.
+### Número de días sin suspensiones en el periodo de crisis por COVID
+
+```{r}
+length(unique(subset((df_2020$FECHA_SOLICITUD), df_2020$TOTAL_TRAB_SUS==0)))
+```
+
+
+# Modelo relacional basado en la estadística relacional básica.
 
 ## Medidas de tendencia central (medias y medianas).
 
-### Moda.
+### Moda trabajadores suspendidos.
 
 ```{r}
 moda_2008<-c(names(which(table(df_2008$TOTAL_TRAB_SUS)==max(table(df_2008$TOTAL_TRAB_SUS)))))
@@ -145,7 +150,29 @@ modas<-data.frame(moda_2008,moda_2020, row.names = c("TOTAL_TRAB_SUS" ))
 modas
 ```
 
-### Medias.
+### Moda trabajadores extinguidos.
+
+```{r}
+moda2_2008<-c(names(which(table(df_2008$TOTAL_TRAB_EXT)==max(table(df_2008$TOTAL_TRAB_EXT)))))
+
+moda2_2020<-c(names(which(table(df_2020$TOTAL_TRAB_EXT)==max(table(df_2020$TOTAL_TRAB_EXT)))))
+
+modas2<-data.frame(moda2_2008,moda2_2020, row.names = c("TOTAL_TRAB_EXT" ))
+modas2
+```
+
+### Moda trabajadores reducidos.
+
+```{r}
+moda3_2008<-c(names(which(table(df_2008$TOTAL_TRAB_RED)==max(table(df_2008$TOTAL_TRAB_RED)))))
+
+moda3_2020<-c(names(which(table(df_2020$TOTAL_TRAB_RED)==max(table(df_2020$TOTAL_TRAB_RED)))))
+
+modas3<-data.frame(moda3_2008,moda3_2020, row.names = c("TOTAL_TRAB_RED" ))
+modas3
+```
+
+### Media trabajadores suspendidos.
 
 ```{r}
 medias_2008<-c(mean(df_2008$TOTAL_TRAB_SUS))
@@ -154,8 +181,25 @@ medias<-data.frame(medias_2008,medias_2020, row.names = c("TOTAL_TRAB_SUS" ))
 medias
 ```
 
+### Media trabajadores extinguidos.
 
-### Medianas.
+```{r}
+medias2_2008<-c(mean(df_2008$TOTAL_TRAB_EXT))
+medias2_2020<-c(mean(df_2020$TOTAL_TRAB_EXT))
+medias2<-data.frame(medias2_2008,medias2_2020, row.names = c("TOTAL_TRAB_EXT" ))
+medias2
+```
+
+### Media trabajadores reducidos.
+
+```{r}
+medias3_2008<-c(mean(df_2008$TOTAL_TRAB_RED))
+medias3_2020<-c(mean(df_2020$TOTAL_TRAB_RED))
+medias3<-data.frame(medias3_2008,medias3_2020, row.names = c("TOTAL_TRAB_RED" ))
+medias3
+```
+
+### Mediana trabajadores suspendidos.
 
 ```{r}
 median_2008<-c(median(df_2008$TOTAL_TRAB_SUS))
@@ -163,6 +207,25 @@ median_2020<-c(median(df_2020$TOTAL_TRAB_SUS))
 medianas<-data.frame(median_2008,median_2020, row.names = c("TOTAL_TRAB_SUS" ))
 medianas
 ```
+
+### Mediana trabajadores extinguidos.
+
+```{r}
+median2_2008<-c(median(df_2008$TOTAL_TRAB_EXT))
+median2_2020<-c(median(df_2020$TOTAL_TRAB_EXT))
+medianas2<-data.frame(median2_2008,median2_2020, row.names = c("TOTAL_TRAB_EXT" ))
+medianas2
+```
+
+### Mediana trabajadores reducidos.
+
+```{r}
+median3_2008<-c(median(df_2008$TOTAL_TRAB_RED))
+median3_2020<-c(median(df_2020$TOTAL_TRAB_RED))
+medianas3<-data.frame(median3_2008,median3_2020, row.names = c("TOTAL_TRAB_RED" ))
+medianas3
+```
+
 
 ### Medidas de posición.
 
@@ -179,7 +242,7 @@ Q<-data.frame(Q25_2008,Q25_2020,Q5_2008,Q5_2020, Q75_2008, Q75_2020, row.names =
 Q
 ```
 
-## Medidas de dispersión.
+## Medidas de dispersión para trabajadores suspendidos.
 
 ### Rango.
 
@@ -218,7 +281,7 @@ varianzas<-data.frame(var_2008,var_2020, row.names = c("TOTAL_TRAB_SUS" ))
 varianzas
 ```
 
-## Resumen estadístico.
+## Resumen estadísticos trabajadores suspendidos.
 
 ### Por sector.
 
@@ -238,23 +301,24 @@ std
 ```
 
 
-### Tabla de frecuencias relativas por sectores.
+### Tabla de frecuencias absolutas y relativas por sectores.
+
 
 ```{r}
-sectores_2008 = c(list(df_2008$SECTOR))
-sectores_2020 = c(list(df_2020$SECTOR))
-prop.table(table(sectores_2008))*100
-prop.table(table(sectores_2020))*100
+tapply(df_2008$TOTAL_TRAB_SUS, df_2008$SECTOR, FUN = sum)
+prop.table(tapply(df_2008$TOTAL_TRAB_SUS, df_2008$SECTOR, FUN = sum))*100
+tapply(df_2020$TOTAL_TRAB_SUS, df_2020$SECTOR, FUN = sum)
+prop.table(tapply(df_2020$TOTAL_TRAB_SUS, df_2020$SECTOR, FUN = sum))*100
 ```
 
-### Diagrámas de cajas por sectores.
+### Diagramas de cajas por sectores.
 
 ```{r}
-boxplot(df_2008$TOTAL_TRAB_SUS~df_2008$SECTOR, main="Diagrama de caja de trabajadores extinguidos año 2008 por sectores", ylab="nº trabajadores extinguidos", xlab="",col = "red", ylim=c(0,35), cex.axis = 0.7)
-boxplot(df_2020$TOTAL_TRAB_SUS~df_2020$SECTOR, main="Diagrama de caja de trabajadores extinguidos año 2020 por sectores", ylab="nº trabajadores extinguidos", xlab="",col = "red", ylim=c(0,30), cex.axis = 0.7)
+boxplot(df_2008$TOTAL_TRAB_SUS~df_2008$SECTOR, main="Diagrama de caja de trabajadores suspendidos año 2008 por sectores", ylab="Nº trabajadores suspendidos", xlab="",col = "red", ylim=c(0,35), cex.axis = 0.7)
+boxplot(df_2020$TOTAL_TRAB_SUS~df_2020$SECTOR, main="Diagrama de caja de trabajadores suspendidos año 2020 por sectores", ylab="Nº trabajadores suspendidos", xlab="",col = "red", ylim=c(0,30), cex.axis = 0.7)
 ```
 
-# Modelo 2. Regresión Lineal.
+# Regresión Lineal.
 
 ### Buscamos la relación (nº trabajadores suspendidos) = a + b·(total trabajadores afectador por el ERTE).
 
