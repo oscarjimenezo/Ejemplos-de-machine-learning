@@ -1,0 +1,266 @@
+---
+title: "Actividad_grupal"
+author: "Lander Ortiz Crespo, Gorka Sudupe Ormaetxea, Óscar Jiménez Osuna"
+date: "14/2/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+par(mar = c(12,6,4,2)+0.1)
+```
+
+
+Leer archivo con R para convertirlo a dataframe.
+
+```{r}
+library(dplyr) 
+library(tidyverse)
+df <- read.table("C:/attrition_data.csv", header=T, sep="," , dec=".")
+head(df)
+```
+Cambiamos el nombre la varible Age
+
+```{r}
+names(df)[1] = "Age"
+```
+
+
+Observar el comportamiento de cada variable, su coherencia, si se ha leído con el tipo de dato adecuado para el análisis, etc.
+
+Estructura del dataframe. Cantidad de filas y columnas.
+```{r}
+dim(df)
+str(df)
+```
+
+Analizar la distribución de las variables, buscando valores perdidos (faltantes) o anómalos, incoherencias, valores extremos, etc. Basta un análisis simplificado, no es necesario pormenorizar.
+
+Valores faltantes o perdidos.
+
+```{r}
+sum(is.na(df))
+```
+
+names() nos permite ver los nombres de las columnas
+
+```{r}
+names(df)
+```
+
+Estudiar los rangos de las variables en el caso de variables contínuas, número de categorías diferentes en el caso de variables categóricas, medidas de dispersión (medias, desviaciones, etc., incluido el cálculo de dichas medidas agrupando en función de una o varias variable categóricas que puedan definir grupos).
+
+Calculamos las correlaciones entre los diferentes atributos.
+
+```{r}
+head(df)
+df_num <- select(df, Age, DailyRate, DistanceFromHome, Education, EmployeeCount, EmployeeNumber, EnvironmentSatisfaction, HourlyRate, JobInvolvement, JobLevel, JobSatisfaction, MonthlyIncome, MonthlyRate, NumCompaniesWorked, PercentSalaryHike, PerformanceRating, RelationshipSatisfaction, StockOptionLevel, TotalWorkingYears, TrainingTimesLastYear, WorkLifeBalance, YearsAtCompany, YearsInCurrentRole, YearsSinceLastPromotion, YearsWithCurrManager )
+
+cor(df_num)
+```
+
+Vamos a escoger los siguientes atributos dados el grado de correlación que tienen con el resto:
+
+MonthlyIncome, JobLevel, NumCompaniesWorked, YearsAtCompany, YearsSinceLastPromotion, YearsWithCurrManager
+
+Guardamos en otro dataset las columnas que vamos a utilizar (las anteriores más algunas categóricas).
+
+```{r}
+datos <- select(df, Attrition, BusinessTravel, Gender, JobLevel, MonthlyIncome, NumCompaniesWorked, YearsAtCompany, YearsSinceLastPromotion, YearsWithCurrManager)
+head(datos)
+```
+
+Distintos valores de los atributos categóricos.
+
+```{r}
+unique(datos$Attrition)
+unique(datos$BusinessTravel)
+unique(datos$Gender)
+unique(datos$JobLeve)
+```
+
+Medidas de dispersión
+
+Resumen de características de dataframe.
+
+Observamos que el datset está muy desbalanceado si tenemos en cuenta nuestro atributo clase (Attrition).
+```{r}
+summary(datos)
+```
+
+Medidas de tendencia central (moda, medias y medianas).
+
+Agrupemos por Attrition y por las diferentes variables ordinales.
+
+```{r}
+by(datos$MonthlyIncome,(datos$Attrition),FUN=summary)
+by(datos$NumCompaniesWorked,(datos$Attrition),FUN=summary)
+by(datos$YearsAtCompany,(datos$Attrition),FUN=summary)
+by(datos$YearsSinceLastPromotion,(datos$Attrition),FUN=summary)
+by(datos$YearsWithCurrManager,(datos$Attrition),FUN=summary)
+```
+
+Histogramas para estudiar tendendias de los datos.
+
+```{r, fig.width = 15, fig.height = 15}
+par(mfrow = c(3, 2))
+hist(df$MonthlyIncome, col = "seagreen", main = "Monthly Income", xlab = "Ingresos mensuales", ylab = "Número de trabajadores",cex.main=2)
+hist(df$NumCompaniesWorked, col = "seagreen", main = "Num Companies Worked", xlab = "Número de empresas en que ha trabajado", ylab = "Número de trabajadores",cex.main=2)
+hist(df$YearsAtCompany, col = "seagreen", main = "Years At Company", xlab = "Años en la compañía", ylab = "Número de trabajadores",cex.main=2)
+hist(df$YearsSinceLastPromotion, col = "seagreen", main = "Years Since Last Promotion", xlab = "Años desde última promoción", ylab = "Número de trabajadores",cex.main=2)
+hist(df$YearsWithCurrManager, col = "seagreen", main = "Years With Curr Manager", xlab = "Número de años con el jefe actual", ylab = "Número de trabajadores",cex.main=2)
+```
+
+
+
+Obtener cualquier agregación que el equipo considere relevante para negocio, y explicar el motivo y las conclusiones que se deducen.
+
+Filtro por la varible Attrition
+```{r}
+Attrition_Yes = filter(datos,Attrition == "Yes")
+Attrition_No = filter(datos,Attrition == "No")
+head(Attrition_Yes)
+```
+
+Podríamos estudiar los valores de salario mensual por género para comparar si existen diferencias.
+
+• Para los empleados que dejan la empresa.
+```{r}
+by(Attrition_Yes$MonthlyIncome,(Attrition_Yes$Gender),FUN=summary)
+```
+
+• Para los empleados que no dejan la empresa.
+```{r}
+by(Attrition_No$MonthlyIncome,(Attrition_No$Gender),FUN=summary)
+```
+
+Observamos que para el grupo que deja el trabajo de media no hay mucha diferencia de salarios. Para los que no dejan el trabajo era evidente que los salarios serían mejores (y algo mejores para el género femenino según estos datos).
+
+Número de compañias en las que el trabajador ha trabajado.
+
+• Para los empleados que dejan la empresa.
+```{r}
+by(Attrition_Yes$NumCompaniesWorked,(Attrition_Yes$Gender),FUN=summary)
+```
+
+• Para los empleados que no dejan la empresa.
+```{r}
+by(Attrition_No$NumCompaniesWorked,(Attrition_No$Gender),FUN=summary)
+```
+
+Para este caso no existen grandes diferencias.
+
+Años en la empresa.
+
+• Para los empleados que dejan la empresa.
+```{r}
+by(Attrition_Yes$YearsAtCompany,(Attrition_Yes$Gender),FUN=summary)
+```
+
+• Para los empleados que no dejan la empresa.
+```{r}
+by(Attrition_No$YearsAtCompany,(Attrition_No$Gender),FUN=summary)
+```
+
+Años desde la última promoción.
+
+• Para los empleados que dejan la empresa.
+```{r}
+by(Attrition_Yes$YearsSinceLastPromotion,(Attrition_Yes$Gender),FUN=summary)
+```
+
+• Para los empleados que no dejan la empresa.
+```{r}
+by(Attrition_No$YearsSinceLastPromotion,(Attrition_No$Gender),FUN=summary)
+```
+
+Años con el mismo jefe.
+
+• Para los empleados que dejan la empresa.
+```{r}
+by(Attrition_Yes$YearsWithCurrManager,(Attrition_Yes$Gender),FUN=summary)
+```
+
+• Para los empleados que no dejan la empresa.
+```{r}
+by(Attrition_No$YearsWithCurrManager,(Attrition_No$Gender),FUN=summary)
+```
+
+Buscar correlaciones y explicarlas, desde el punto de vista de negocio.
+
+```{r}
+head(datos)
+```
+```{r}
+datos_num <- select(datos, JobLevel, MonthlyIncome, NumCompaniesWorked, YearsAtCompany, YearsSinceLastPromotion, YearsWithCurrManager)
+cor(datos_num)
+```
+
+Con esta tabla resumen podemos explicar las correlaciones desde el punto de vista del negocio. 
+
+• Por ejemplo, si tomamos la primera columna, vemos que a el nivel de jerarquía en la empresa está intimamente relacionada con los ingresos mensuales, con la antiguedad en la empresa algo menos, y en menor medida con los años desde la última promoción y los años con el mismo jefe.
+• Los años en la compañía está muy relacionada con haber tenido mucho tiempo al mismo jefe.
+• Los años desde la última promoción con el número de años que se lleva trabanjado en la empresa.
+
+
+También podemos representar la matriz graficamente.
+```{r, fig.width = 20, fig.height = 20}
+library(GGally)
+ggpairs(datos, title="Matriz de correlación",cex.main=10, aes(colour = Gender))
+```
+
+Representar gráficamente algunas medidas de dispersión (boxplots por grupos, histogramas  de una o varias variables, incluidos histogramas de una misma variable separada en función de otra, gráficos de dispersión, etc). No es necesario obtener gráficos impresionantes; se valorará mucho más la explicación acerca de las conclusiones que se desprenden del gráfico. Imprescindible que incluyan ejes con marcas visibles y etiquetas indicando qué se representa y en qué unidades está expresado.
+
+
+Graficamos para comparar
+
+```{r}
+par(mfrow = c(1, 2))
+barplot(table(Attrition_Yes$BusinessTravel), col = c("royalblue", "purple", "grey"), main = "Attrition_Yes / Business Travel",cex.main=1, ylab = "Número de trabajadores")
+barplot(table(Attrition_No$BusinessTravel), col = c("royalblue", "purple", "grey"), main = "Attrition_No / Business Travel",cex.main=1, ylab = "Número de trabajadores")
+```
+```{r}
+par(mfrow = c(1, 2))
+barplot(table(Attrition_Yes$Gender), col = c("royalblue", "purple"), main = "Attrition_Yes / Gender",cex.main=1, ylab = "Número de trabajadores")
+barplot(table(Attrition_No$Gender), col = c("royalblue", "purple"), main = "Attrition_No / Gender",cex.main=1, ylab = "Número de trabajadores")
+```
+
+```{r}
+par(mfrow = c(1, 2))
+barplot(table(Attrition_Yes$JobLevel), col = "seagreen", main = "Attrition_Yes / JobLevel",cex.main=1, xlab = "Nivel de jerarquía en la empresa", ylab = "Número de trabajadores")
+barplot(table(Attrition_No$JobLevel), col = "seagreen", main = "Attrition_No / JobLevel",cex.main=1, xlab = "Nivel de jerarquía en la empresa",ylab = "Número de trabajadores")
+```
+
+```{r, fig.width = 10, fig.height = 10 }
+par(mfrow=c(3, 2))
+boxplot(datos$MonthlyIncome~datos$Attrition, col = c("royalblue", "seagreen"), main = "Attrition_Yes / Monthly Income",cex.main=1, xlab = "Dejan la empresa", ylab="Ingresos mensuales")
+boxplot(datos$NumCompaniesWorked~datos$Attrition, col = c("royalblue", "seagreen"), main = "Attrition_Yes / Num Companies Worked",cex.main=1, xlab = "Dejan la empresa", ylab="Empresas trabajadas")
+boxplot(datos$YearsAtCompany~datos$Attrition, col = c("royalblue", "seagreen"), main = "Attrition_Yes / Years At Companye",cex.main=1,xlab = "Dejan la empresa", ylab="Años en la compañía")
+boxplot(datos$YearsSinceLastPromotion~datos$Attrition, col = c("royalblue", "seagreen"), main = "Attrition_Yes / Years Since Last Promotion",cex.main=1,xlab = "Dejan la empresa", ylab="Años desde última promoción")
+boxplot(datos$YearsWithCurrManager~datos$Attrition, col =  c("royalblue", "seagreen"), main = "Attrition_Yes / Years With Curr Manager",cex.main=1,xlab = "Dejan la empresa", ylab="Años con el actual jefe")
+```
+
+Comparo los años en la empresa en función con los ingresos al mes, con los años teniendo al mismo jefe y la jerarquía en al empresa en función de los años en la misma. Calculos también sus regresiones.
+
+```{r}
+regresion_ingresos <- lm(datos$MonthlyIncome~datos$YearsAtCompany, datos)
+summary(regresion_ingresos)
+regresion_jefe <- lm(datos$YearsWithCurrManager~datos$YearsAtCompany, datos)
+summary(regresion_jefe)
+regresion_Level <- lm(datos$JobLevel~datos$YearsAtCompany, datos)
+summary(regresion_Level)
+```
+
+```{r, fig.width = 15, fig.height = 15 }
+par(mfrow=c(3, 2))
+plot(datos$MonthlyIncome~datos$YearsAtCompany, main="MonthlyIncome / YearsAtCompany", ylab="Ingresos mensuales", xlab="Años en la empresa",cex.main=1, col = "red",cex.main=2, cex.lab=1.5)
+abline(regresion_ingresos, col = "blue")
+plot(datos$YearsWithCurrManager~datos$YearsAtCompany, main="YearsWithCurrManager / YearsAtCompany", ylab="Ingresos mensuales", xlab="Años con el mismo jefe",cex.main=1, col = "red",cex.main=2, cex.lab=1.5)
+abline(regresion_jefe, col = "blue")
+plot(datos$JobLevel~datos$YearsAtCompany, main="JobLevel / YearsAtCompany", ylab="Jerarquía en la empresa", xlab="Años en la empresa",cex.main=1, col = "red", cex.axis = 1,cex.main=2, cex.lab=1.5)
+abline(regresion_Level, col = "blue")
+```
+
+
