@@ -1,0 +1,177 @@
+---
+title: "Laboratorio"
+author: "Óscar Jiménez Osuna"
+date: "20/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Escenario 1. Estudio de una población:
+
+Vamos a realizar un contraste de hipótesis del siguiente problema. Una fabrica de rodamientos para motores eléctricos está probando un nuevo método de fabricación el cual considera bueno si los rodamientos tienen una duración media de funcionamiento de 11000 horas con una desviación típica de 250 horas. Crearemos un dataset con 1000 muestras producidas con este método. Calcularemos la media y nos preguntaremos si se puede aceptar la hipótesis de validez del nuevo proceso con un riesgo igual o menor al 5%.
+
+Creamos un dataset con el número de horas de duración de funcionamiento de una muestra de 1000 rodamientos según una distribución normal con media 1100 y desviación típica 250 horas. 
+
+```{r}
+# fijamos una semilla para obtener siempre los mismo valores
+set.seed(123)
+horas<-rnorm(n = 1000, mean = 11000, sd = 250)
+rodamientos <- data.frame(horas)
+head(rodamientos)
+```
+
+Realizaremos la gráfica del histograma de los datos para comprobar el comportamiento normal de los mismos:
+
+```{r}
+hist(rodamientos$horas, main = "Horas funcionamiento rodamientos", col = "blue", xlab = "Número de horas")
+```
+También podemos usar el gráfico Q-Q que hace una primera aproximación visual de si hay o no normalidad. Hay que tener en cuenta que este gráfico es meramente descriptivo.
+
+```{r}
+qqnorm( rodamientos$horas ) # la nube de puntos 
+qqline( rodamientos$horas ) # la recta
+```
+
+Interpretación: La nube de puntos se sitúa sobre la recta. En un principio, visualmente se aprecia que nuestros datos cumplen el supuesto de normalidad.
+
+#### Estadístico de contraste: Media
+
+Contraste unilateral.
+
+1 Enunciamos las hipótesis nula y alternativa:
+
+H0 : μ >= 11000 
+H1 : μ < 11000
+
+2.- Elegimos como nivel de significancia α = 0.05 al que le corresponde un valor crítico de z_(α⁄2) = 1.96.
+
+3.- Elegiremos como estadístico la media que calculándola sobre nuestra muestra obtenemos un valor de 11012.28.
+
+```{r}
+mean(rodamientos$horas)
+```
+
+4.- Calculamos el estadístico, el p-valor y del intervalo de confianza :
+ 
+- Método del estadístico:
+
+```{r}
+mu0 <- 11000
+n <- 1000
+Xbar <- mean(rodamientos$horas)
+s <- 250
+Zexp <- (Xbar-mu0)/(sqrt(s)/sqrt(n))
+Zexp
+```
+
+• Valor crítico: Para α = 0.05, α/2 = 0.025(le corresponde un valor crítico: zα/2 = 1.96) ---> Zexp > zα/2 ---> `Aceptamos H0`
+
+- Método del p-valor:
+
+1) Realizar el contraste para normalidad. En este contraste la hipótesis nula es la hipótesis de normalidad, esto es, no hay diferencias entre nuestra distribución y una distribución normal con esa media y esa desviación típica. Para contrastar la normalidad usamos el test de Shapiro-Wilk, con la función `shapiro.test( )`.
+
+```{r}
+shapiro.test( rodamientos$horas )
+```
+
+Interpretación: Con un p-value = 0.4765 mayor de 0.05 no podemos rechazar la hipótesis nula (hipótesis de normalidad). Por lo tanto, podemos concluir que nuestros datos cumplen el supuesto de normalidad.
+
+2) Realizamos el contraste. La prueba t para una muestra se utiliza cuando tenemos una variable de medida y un valor esperado para la media, y se supone normalidad de los datos (o muestra grande). Para este contraste sobre una media utilizamos el `t.test`:
+
+```{r}
+t.test( rodamientos$horas, mu = 11000, conf.level = 0.95, alternative = "less")
+```
+
+Interpretamos los resultados. Con un p-value = 0.6964 mayor de 0.05 no podemos rechazar la hipótesis nula H0. Podemos concluir que la media de los valores es 11000. El intervalo de confianza incluye el 110000 (-Inf,  11016.94).
+
+𝑺𝒊 𝒑 𝒗𝒂𝒍𝒐𝒓 ≤𝜶→𝐑𝐞𝐜𝐡𝐚𝐳𝐚𝐦𝐨𝐬 𝐇𝟎
+
+𝑺𝒊 𝒑 𝒗𝒂𝒍𝒐𝒓> 𝜶→𝐀𝐜𝐞𝐩𝐭𝐚𝐦𝐨𝐬 𝐇𝟎
+
+
+Con un p-value = 0.6964 > 0.05. `Aceptamos H0`, no podemos rechazar la hipótesis nula (hipótesis de normalidad). Por lo tanto, podemos concluir que nuestros datos cumplen el supuesto de normalidad.
+
+
+IC < a 11016.94 -> 11000 pertenece al intervalo de confianza -`Aceptamos H0` 
+
+
+
+### Escenario 2. Estudio de dos poblaciones:
+
+
+```{r}
+# fijamos una semilla para obtener siempre los mismo valores
+set.seed(1)
+horas_1<-rnorm(n = 1000, mean = 0.8, sd = 0.05)
+set.seed(2)
+horas_2<-rnorm(n = 1000, mean = 0.8, sd = 0.05)
+soldador_1 <- data.frame(horas_1)
+soldador_2 <- data.frame(horas_2)
+head(soldador_1)
+head(soldador_2)
+```
+
+Realizaremos laS gráficaS de los histogramas de los datos para comprobar el comportamiento normal de los mismos:
+
+```{r}
+par(mfrow = c(1, 2))
+hist(soldador_1$horas_1, main = "Horas soldador 1", col = "blue", xlab = "Número de horas")
+hist(soldador_2$horas_2, main = "Horas soldador 2", col = "blue", xlab = "Número de horas")
+```
+
+#### Estadístico de contraste: Media
+
+Contraste bilateral partiendo de la base que ambas medias son iguales con lo que d0 = 0.
+
+1 Enunciamos las hipótesis nula y alternativa:
+
+H0 : 𝜇𝑥− 𝜇𝑦 = 𝑑0-->      μx - μy = 0 ↔ H0: μx = μy
+H1 : 𝜇𝑥− 𝜇𝑦 ≠ 𝑑0-->      μx - μy ≠ 0 ↔ H1: μx ≠ μy
+
+2.- Elegimos como nivel de significancia α = 0.05 al que le corresponde un valor crítico de z_(α⁄2)=1.96.
+
+3.- Elegiremos como estadístico la media.
+
+```{r}
+mean(soldador_1$horas_1)
+mean(soldador_2$horas_2)
+mean(soldador_1$horas_1) - mean(soldador_2$horas_2)
+```
+
+4.- Calculamos el estadístico, el p-valor y del intervalo de confianza :
+
+```{r}
+mu01 <- 0.8
+mu02 <- 0.8
+n1 <- 1200
+n2 <- 1200
+Xbar1 <- mean(soldador_1$horas_1)
+Xbar2 <- mean(soldador_2$horas_2)
+s1 <- 0.05
+s2 <- 0.05
+Zexp <- ((Xbar1-Xbar2)-(mu01-mu02))/ sqrt((mu01^2/n1)+(mu02^2/n2))
+Zexp
+```
+
+- Método del estadístico:
+
+• Valor crítico: Para α = 0.05, α/2 = 0.025(le corresponde un valor crítico: zα/2 = 1.96) ---> Zexp < zα/2 ---> `Aceptamos H0`
+
+- Método del p-valor:
+
+Realizamos el contraste. Para la prueba t para dos muestras independientes usamos la función t.test( ), sobre muestras independientes paired = FALSE, en un contraste bilateral (de dos colas) `alternative = "two.sided"`
+
+```{r}
+t.test( soldador_1$horas_1, soldador_2$horas_2, 
+        conf.level = 0.95, paired = FALSE, 
+        alternative = "two.sided", var.equal = TRUE)
+```
+
+Interpretamos los resultados. Con un p-value = 0.1083 mayor de 0.05 no podemos rechazar la hipótesis nula H0 de igualdad de medias. Esto es, no hay diferencias significativas entre las medias. Podemos concluir que la media de los hombres y la media de las mujeres no son distintas para el mes inicial.
+[ 0.7994176 0.8030999] -> 0.8 pertenece al intervalo de confianza -`Aceptamos H0` 
+
+
+
